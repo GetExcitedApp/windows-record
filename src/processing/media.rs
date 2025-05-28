@@ -411,23 +411,8 @@ unsafe fn create_audio_output_type() -> Result<IMFMediaType> {
 pub unsafe fn init_media_foundation() -> Result<()> {
   info!("init_media_foundation - Starting");
 
-  use windows::Win32::System::Com::*;
-
-  info!("init_media_foundation - Initializing COM with COINIT_MULTITHREADED");
-  match CoInitializeEx(Some(ptr::null()), COINIT_MULTITHREADED) {
-    Ok(_) => {
-      info!("init_media_foundation - COM initialized successfully");
-    }
-    Err(e) => {
-      // Check if COM is already initialized with a different threading model
-      if e.code().0 == 0x80010106u32 as i32 {
-        info!("init_media_foundation - COM already initialized with different threading model, continuing");
-      } else {
-        error!("init_media_foundation - Failed to initialize COM: {:?}", e);
-        return Err(e);
-      }
-    }
-  }
+  // Note: COM is already initialized by Electron/Chromium, so we don't need to call CoInitializeEx
+  info!("init_media_foundation - Skipping COM initialization (already handled by Electron)");
 
   info!("init_media_foundation - Starting Media Foundation with MF_VERSION and MFSTARTUP_FULL");
   MFStartup(MF_VERSION, MFSTARTUP_FULL)?;
@@ -440,15 +425,12 @@ pub unsafe fn init_media_foundation() -> Result<()> {
 pub unsafe fn shutdown_media_foundation() -> Result<()> {
   info!("shutdown_media_foundation - Starting");
 
-  use windows::Win32::System::Com::*;
-
   info!("shutdown_media_foundation - Shutting down Media Foundation");
   MFShutdown()?;
   info!("shutdown_media_foundation - Media Foundation shut down successfully");
 
-  info!("shutdown_media_foundation - Uninitializing COM");
-  CoUninitialize();
-  info!("shutdown_media_foundation - COM uninitialized");
+  // Note: We don't call CoUninitialize() since we didn't initialize COM ourselves
+  info!("shutdown_media_foundation - Skipping COM uninitialization (managed by Electron)");
 
   info!("shutdown_media_foundation - Completed successfully");
   Ok(())
